@@ -1,0 +1,45 @@
+{
+  "name": "@afilimax/mercado-livre-provider",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Afilimax/mercado-livre-provider.git"
+  },
+  "homepage": "https://github.com/Afilimax/mercado-livre-provider#readme",
+  "bugs": {
+    "url": "https://github.com/Afilimax/mercado-livre-provider/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/*",
+    "!/**/__tests__"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node ./src/index.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" --fix"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "marcuth"
+  ],
+  "author": "Marcuth",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.8.1",
+    "prettier-plugin-sort-imports": "^1.8.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
