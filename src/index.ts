@@ -84,8 +84,19 @@ export class MercadoLivreProvider extends AffiliateProvider<MercadoLivreProvider
                         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
                     }
                 })
+                
                 if (redirectResponse.url && redirectResponse.url !== url) {
-                    url = redirectResponse.url
+                    let expandedUrl = redirectResponse.url
+
+                    if (expandedUrl.includes("/social/")) {
+                        const html = await redirectResponse.text()
+                        const productMatch = html.match(/https:\/\/produto\.mercadolivre\.com\.br\/[^\s\"?]+/)
+                        if (productMatch) {
+                            expandedUrl = productMatch[0]
+                        }
+                    }
+
+                    url = expandedUrl
                     url = url.endsWith("/") ? url.slice(0, -1) : url
                 }
             } catch (error) {

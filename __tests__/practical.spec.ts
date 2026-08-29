@@ -46,7 +46,7 @@ describe("MercadoLivreProvider Practical Test", () => {
         }
     })
 
-    it("should handle an already affiliated shortlink and correctly propagate the API error (integration)", async () => {
+    it("should extract product URL from social pages and create a real affiliate URL (integration)", async () => {
         if (REAL_COOKIES.length === 0) {
             console.warn(`⚠️ Pulando teste prático: Arquivo cookies.json não encontrado ou vazio em: ${COOKIES_PATH}`)
             return
@@ -61,13 +61,16 @@ describe("MercadoLivreProvider Practical Test", () => {
 
         try {
             console.log(`Gerando link para: ${testUrl}`)
-            await provider.createAffiliateUrl(testUrl)
+            const affiliateUrl = await provider.createAffiliateUrl(testUrl)
+
+            expect(affiliateUrl).toMatch(/https:\/\/meli\.la\/.*/)
             
-            // Se não der erro, falhamos o teste de propósito, pois a API do ML deve rejeitar esse link
-            expect.fail("Expected createAffiliateUrl to throw an error for social pages")
+            console.log("✅ Sucesso!")
+            console.log(`🔗 Link gerado: ${affiliateUrl}`)
         } catch (error: any) {
-            console.log("✅ API rejeitou corretamente a URL. Erro recebido:", error.message)
-            expect(error.message).toMatch(/URL not allowed in affiliates program|URL Invalid/)
+            console.error("❌ Falha no teste prático:")
+            console.error(error.message)
+            throw error
         }
     })
 })
