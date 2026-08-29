@@ -74,6 +74,8 @@ export class MercadoLivreProvider extends AffiliateProvider<MercadoLivreProvider
     }
 
     async createAffiliateUrl(url: string): Promise<string> {
+        url = url.endsWith("/") ? url.slice(0, -1) : url
+
         const cookieString = this.getCookieString()
         const csrfToken = await this.fetchCsrfToken(url)
 
