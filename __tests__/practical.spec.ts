@@ -45,4 +45,29 @@ describe("MercadoLivreProvider Practical Test", () => {
             throw error
         }
     })
+
+    it("should handle an already affiliated shortlink and correctly propagate the API error (integration)", async () => {
+        if (REAL_COOKIES.length === 0) {
+            console.warn(`⚠️ Pulando teste prático: Arquivo cookies.json não encontrado ou vazio em: ${COOKIES_PATH}`)
+            return
+        }
+
+        const provider = new MercadoLivreProvider({
+            tag: REAL_TAG,
+            cookies: REAL_COOKIES
+        })
+
+        const testUrl = "https://meli.la/2pzPQEr/"
+
+        try {
+            console.log(`Gerando link para: ${testUrl}`)
+            await provider.createAffiliateUrl(testUrl)
+            
+            // Se não der erro, falhamos o teste de propósito, pois a API do ML deve rejeitar esse link
+            expect.fail("Expected createAffiliateUrl to throw an error for social pages")
+        } catch (error: any) {
+            console.log("✅ API rejeitou corretamente a URL. Erro recebido:", error.message)
+            expect(error.message).toMatch(/URL not allowed in affiliates program|URL Invalid/)
+        }
+    })
 })

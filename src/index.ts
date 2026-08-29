@@ -76,6 +76,23 @@ export class MercadoLivreProvider extends AffiliateProvider<MercadoLivreProvider
     async createAffiliateUrl(url: string): Promise<string> {
         url = url.endsWith("/") ? url.slice(0, -1) : url
 
+        if (url.includes("meli.la")) {
+            try {
+                const redirectResponse = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                    }
+                })
+                if (redirectResponse.url && redirectResponse.url !== url) {
+                    url = redirectResponse.url
+                    url = url.endsWith("/") ? url.slice(0, -1) : url
+                }
+            } catch (error) {
+                console.warn(`Failed to expand meli.la shortlink: ${url}`, error)
+            }
+        }
+
         const cookieString = this.getCookieString()
         const csrfToken = await this.fetchCsrfToken(url)
 
