@@ -91,6 +91,7 @@ export class MercadoLivreProvider extends AffiliateProvider<MercadoLivreProvider
                     if (expandedUrl.includes("/social/")) {
                         const html = await redirectResponse.text()
                         const productMatch = html.match(/https:\/\/produto\.mercadolivre\.com\.br\/[^\s\"?]+/)
+                        
                         if (productMatch) {
                             expandedUrl = productMatch[0]
                         }
