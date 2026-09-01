@@ -50,5 +50,10 @@
   },
   "peerDependencies": {
     "@afilimax/core": "^0.4.1"
+  },
+  "dependencies": {
+    "@xcrap/core": "^0.2.3",
+    "@xcrap/extractor": "^0.3.2",
+    "@xcrap/got-scraping-client": "^0.1.1"
   }
 }

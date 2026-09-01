@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { MercadoLivreProvider } from "../src/index"
+import { isSocialLink } from "../src/helpers/is-social-link.helper"
+import { isShortLink } from "../src/helpers/is-short-link.helper"
 
 describe("MercadoLivreProvider", () => {
     const mockOptions = {
@@ -15,6 +17,18 @@ describe("MercadoLivreProvider", () => {
     beforeEach(() => {
         provider = new MercadoLivreProvider(mockOptions)
         vi.restoreAllMocks()
+    })
+
+    it("should correctly identify social links", () => {
+        const socialUrl =
+            "https://www.mercadolivre.com.br/social/tj20260304085025?matt_word=tj20260304085025&matt_tool=98606443&forceInApp=true&ref=BJQXJBXbI3SSL2K3o6Nyz09M0aB%2FUTjAL6Yp9CVoar%2FtEBh3IxRpM7NZ2EKdXFU%2BuDrurC8I4ofHuLLW9sQ7Hb88jMT3Fz17mF9OY0MjxWwpytPaL%2Fy9MakyRqK%2FRP2rB7Wgw7eCkafRwesF4nXTfykK6pa4Jw0gBOiljt1AhdSA54iXG39yzvoNdejMnuaPBteNVU8%3D"
+        expect(isSocialLink(socialUrl)).toBe(true)
+        expect(isSocialLink("https://produto.mercadolivre.com.br/MLB-123")).toBe(false)
+    })
+
+    it("should correctly identify short links", () => {
+        expect(isShortLink("https://meli.la/2pzPQEr/")).toBe(true)
+        expect(isShortLink("https://produto.mercadolivre.com.br/MLB-123")).toBe(false)
     })
 
     it("should have the correct name", () => {
