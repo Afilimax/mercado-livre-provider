@@ -1,7 +1,7 @@
 {
   "name": "@afilimax/mercado-livre-provider",
   "description": "Provedor de links de afiliados para o Mercado Livre, integrado ao ecossistema Afilimax. Este pacote permite converter URLs de produtos do Mercado Livre em links de afiliados encurtados utilizando a API oficial (via headers de autenticação/cookies).",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "commonjs",
   "repository": {
     "type": "git",
