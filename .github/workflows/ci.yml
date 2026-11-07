@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, format & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Em push: aplica as correções automaticamente.
+      - name: Format
+        if: github.event_name == 'push'
+        run: npm run format
+
+      - name: Lint (fix)
+        if: github.event_name == 'push'
+        run: npm run lint
+
+      - name: Commit fixes
+        if: github.event_name == 'push'
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style: lint fix and format [skip ci]"
+            git push
+          fi
+
+      # Em pull request: apenas verifica (PRs de forks não têm permissão de escrita).
+      - name: Lint (check)
+        if: github.event_name == 'pull_request'
+        run: npx eslint "src/**/*.ts"
+
+      - name: Test with coverage (100%)
+        run: npm run test:cov
+
+      - name: Typecheck
+        run: npx tsc --noEmit
