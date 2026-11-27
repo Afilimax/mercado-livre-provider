@@ -75,6 +75,7 @@ O provedor identifica automaticamente URLs dos seguintes domínios:
 ---
 
 Produzido com ❤️ pela equipe **Afilimax**.
+
 ---
 
 ## Automatize sua operação de afiliados
