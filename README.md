@@ -7,74 +7,151 @@
 
 # @afilimax/mercado-livre-provider
 
-Provedor de links de afiliados para o Mercado Livre, integrado ao ecossistema Afilimax. Este pacote permite converter URLs de produtos do Mercado Livre em links de afiliados encurtados utilizando a API oficial (via headers de autenticação/cookies).
+Provedor de links de afiliado do Mercado Livre para o ecossistema Afilimax. O pacote usa a API do programa de afiliados com cookies de sessão e uma tag de rastreamento para gerar URLs encurtadas de divulgação.
+
+## Recursos
+
+- Geração de links pela API do Mercado Livre Afiliados.
+- Autenticação por cookies da sessão e token CSRF.
+- Busca do token CSRF na página do produto com fallback para o cookie `_csrf`.
+- Expansão automática de links curtos `meli.la`.
+- Extração da URL do produto em páginas sociais do Mercado Livre.
+- Remoção da barra final antes do processamento.
+- Retorno do campo `short_url` gerado pela API.
+- Funcionamento por requisições HTTP, sem abrir um navegador.
+- Compatibilidade com `AffiliateProvider` e `AffiliateManager`.
 
 ## Instalação
 
 ```bash
-npm install @afilimax/mercado-livre-provider
+npm install @afilimax/mercado-livre-provider @afilimax/core
 ```
 
-> [!IMPORTANT]
-> Este pacote requer `@afilimax/core` como dependência de par (peer dependency).
+O `@afilimax/core` é uma dependência de par obrigatória, na versão `>=0.4.1`.
 
 ## Como usar
 
-O `MercadoLivreProvider` utiliza autenticação baseada em cookies para interagir com a API de afiliados do Mercado Livre.
+Carregue os cookies de um arquivo local e informe sua tag de afiliado:
 
 ```typescript
-import { MercadoLivreProvider } from "@afilimax/mercado-livre-provider";
+import { readFileSync } from "node:fs"
+import { MercadoLivreProvider } from "@afilimax/mercado-livre-provider"
 
 const provider = new MercadoLivreProvider({
-    tag: "sua_tag_de_afiliado",
-    cookies: [
-        { name: "_csrf", value: "seu_token_csrf" },
-        { name: "_d2id", value: "..." },
-        // outros cookies necessários para a sessão
-    ]
-});
+    tag: process.env.MERCADO_LIVRE_AFFILIATE_TAG!,
+    cookies: JSON.parse(readFileSync("cookies.json", "utf8")),
+})
 
-async function run() {
-    const originalUrl = "https://produto.mercadolivre.com.br/MLB-12345678-produto-exemplo-_JM";
-    
+async function main() {
+    const productUrl = "https://www.mercadolivre.com.br/p/MLB22649400"
+
     try {
-        const affiliateUrl = await provider.createAffiliateUrl(originalUrl);
-        console.log("Link de Afiliado:", affiliateUrl); // Retorna a short_url gerada
+        const affiliateUrl = await provider.createAffiliateUrl(productUrl)
+        console.log("Affiliate URL:", affiliateUrl)
     } catch (error) {
-        console.error("Erro ao gerar link:", error.message);
+        console.error("Failed to create affiliate URL:", error)
     }
 }
 
-run();
+main()
 ```
 
-## Configurações
+Links curtos e páginas sociais são resolvidos antes da chamada à API de afiliados.
 
-A interface `MercadoLivreProviderOptions` aceita as seguintes propriedades:
+### Uso com AffiliateManager
 
-| Propriedade | Tipo | Descrição |
+```typescript
+import { AffiliateManager } from "@afilimax/core"
+import { MercadoLivreProvider } from "@afilimax/mercado-livre-provider"
+
+const manager = new AffiliateManager([
+    new MercadoLivreProvider({
+        tag: process.env.MERCADO_LIVRE_AFFILIATE_TAG!,
+        cookies: JSON.parse(readFileSync("cookies.json", "utf8")),
+    }),
+])
+
+const affiliateUrl = await manager.createAffiliateUrl("https://www.mercadolivre.com.br/p/MLB22649400")
+
+console.log("Affiliate URL:", affiliateUrl)
+```
+
+O gerenciador retorna `null` quando nenhum provedor registrado aceita a URL.
+
+## Configuração
+
+A interface `MercadoLivreProviderOptions` possui dois campos obrigatórios:
+
+| Opção | Tipo | Descrição |
 | :--- | :--- | :--- |
-| `tag` | `string` | Sua tag de identificação de afiliado (nickname/ID). |
-| `cookies` | `any[]` | Array de cookies de sessão para autenticação na API. |
+| `cookies` | `any[]` | Cookies da sessão autenticada no Mercado Livre. |
+| `tag` | `string` | Tag de identificação usada pelo programa de afiliados. |
 
-## Domínios Suportados
+Cada cookie precisa conter pelo menos `name` e `value`. O cookie `_csrf`, quando presente, serve como fallback caso o token não seja encontrado na página do produto.
 
-O provedor identifica automaticamente URLs dos seguintes domínios:
+### Como obter os cookies
+
+1. Faça login na conta participante do Mercado Livre Afiliados.
+2. Confirme que a área de geração de links está acessível.
+3. Exporte os cookies da sessão em JSON com uma extensão de navegador.
+4. Salve o conteúdo em `cookies.json` e mantenha o arquivo fora do controle de versão.
+
+Os cookies dão acesso à sua sessão. Não os compartilhe nem os inclua no código.
+
+### Uso sem navegador
+
+O provedor não usa Puppeteer nem outro navegador automatizado. As expansões de URL, a leitura do token CSRF e a criação do link são feitas com requisições HTTP.
+
+## Referência da API
+
+### `new MercadoLivreProvider(options)`
+
+Cria um provedor com os cookies e a tag informados.
+
+### `createAffiliateUrl(url: string): Promise<string>`
+
+Resolve a URL de origem e envia o endereço e a tag para a API de afiliados. Retorna a URL curta gerada ou lança um erro quando a resposta não é bem-sucedida ou não contém `short_url`.
+
+| Parâmetro | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `url` | `string` | URL do produto, link curto ou página social suportada. |
+
+### `supportsUrl(url: string): boolean`
+
+Método herdado de `AffiliateProvider` que verifica o hostname e seus subdomínios.
+
+### Domínios suportados
+
 - `mercadolivre.com.br`
 - `meli.la`
 
+### Erros comuns
+
+| Erro | Causa provável |
+| :--- | :--- |
+| `Failed to create Mercado Livre affiliate URL` | A API recusou a sessão, a tag ou a URL; o status e o corpo da resposta são incluídos no erro. |
+| `Mercado Livre API response missing affiliate link` | A resposta foi recebida sem o campo `short_url`. |
+| `Failed to extract product URL from social link` | A página social não expôs uma URL de produto reconhecida. |
+
 ## Desenvolvimento
 
-### Scripts Disponíveis
+Instale as dependências com `npm install`. Os scripts disponíveis são:
 
-- `npm run build`: Compila o projeto para o diretório `dist`.
-- `npm run dev`: Executa o projeto em ambiente de desenvolvimento usando `ts-node`.
-- `npm run lint`: Verifica e corrige problemas de estilo de código.
-- `npm run format`: Formata o código fonte usando Prettier.
+| Comando | Finalidade |
+| :--- | :--- |
+| `npm run dev` | Executa `src/index.ts` com `ts-node`. |
+| `npm run build` | Compila o TypeScript para `dist/`. |
+| `npm test` | Executa os testes uma vez com Vitest. |
+| `npm run test:watch` | Executa os testes em modo de observação. |
+| `npm run test:cov` | Executa os testes com cobertura. |
+| `npm run lint` | Executa o ESLint com correção automática. |
+| `npm run format` | Formata os arquivos de `src/` com Prettier. |
 
----
+Os testes práticos incluídos em `npm test` leem `__tests__/cookies.json` e são ignorados quando o arquivo está ausente ou vazio. A tag usada por esses testes está definida no próprio arquivo de teste e deve ser ajustada localmente para uma conta autorizada.
 
-Produzido com ❤️ pela equipe **Afilimax**.
+## Licença
+
+Distribuído sob a licença [MIT](./LICENSE).
 
 ---
 
